@@ -18,10 +18,10 @@ export const useUserStore = defineStore({
                         Authorization: localStorage.getItem('token-type')+ ' ' + localStorage.getItem('access-token')
                     }
                 })
-                console.log(data)
+                // console.log(data)
                 this.user = data
             } catch (error) {
-                console.log(error)
+                // console.log(error)
                 this.user = false
             }
         }

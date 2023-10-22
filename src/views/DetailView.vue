@@ -4,26 +4,35 @@ import Gallery from "../components/detail/Gallery.vue";
 import axios from "axios";
 import { RouterLink, useRoute } from "vue-router";
 import { ref, onMounted, computed } from "vue";
+import { useUserStore } from "@/stores/user";
 
 const route = useRoute();
 const product = ref(false);
+const userStore = useUserStore();
+const user = computed(() => userStore.getUser);
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const features = computed(() => {
-  return product.value.features.split(',').map(feature => feature.trim());
-})
+  return product.value.features.split(",").map((feature) => feature.trim());
+});
 
 const description = computed(() => {
-  return product.value.description.split('\r\n\r\nSuitable for :').map(feature => feature.trim());
-})
+  return product.value.description
+    .split("\r\n\r\nSuitable for :")
+    .map((feature) => feature.trim());
+});
 
 const Suitable = computed(() => {
-  let data = product.value.description.split('\r\n\r\nSuitable for :').map(feature => feature.trim());
-  let appsText = data[1]
-  return appsText.split('\n');
-})
+  let data = product.value.description
+    .split("\r\n\r\nSuitable for :")
+    .map((feature) => feature.trim());
+  let appsText = data[1];
+  return appsText.split("\n");
+});
 
 onMounted(() => {
   window.scrollTo(0, 0);
+  userStore.fetchUser();
   getProduct();
 });
 
@@ -34,7 +43,6 @@ async function getProduct() {
         route.params.id +
         "&show_product=1"
     );
-    console.log(response.data.data);
     product.value = response.data.data;
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -53,7 +61,10 @@ async function getProduct() {
             {{ product.name }}
           </h1>
           <p class="text-gray-500">{{ product.subtitle }}</p>
-          <Gallery :defaultImage="product.thumbnails" :galleries="product.galleries"/>
+          <Gallery
+            :defaultImage="product.thumbnails"
+            :galleries="product.galleries"
+          />
           <section class="" id="orders">
             <h1 class="mt-8 mb-3 text-lg font-semibold">About</h1>
             <div class="text-gray-500">
@@ -61,9 +72,7 @@ async function getProduct() {
                 {{ description[0] }}
               </p>
               Suitable for : <br />
-              <p class="pb-0" v-for="data in Suitable">
-                {{ data }} <br />
-              </p>
+              <p class="pb-0" v-for="data in Suitable">{{ data }} <br /></p>
             </div>
           </section>
         </main>
@@ -113,12 +122,31 @@ async function getProduct() {
                   </li>
                 </ul>
               </div>
-              <RouterLink
-                to="/pricing"
-                class="inline-flex items-center justify-center w-full px-8 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-full hover:bg-indigo-700 md:py-2 md:text-md md:px-10 hover:shadow"
-              >
-                Download Now
-              </RouterLink>
+              <div v-if="user.data">
+                <a
+                  v-if="user.data.subscription.length > 0"
+                  :href="product.file"
+                  class="inline-flex items-center justify-center w-full px-8 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-full hover:bg-indigo-700 md:py-2 md:text-md md:px-10 hover:shadow"
+                >
+                  Download Now
+                </a>
+                <template v-else>
+                  <RouterLink
+                    to="/pricing"
+                    class="inline-flex items-center justify-center w-full px-8 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-full hover:bg-indigo-700 md:py-2 md:text-md md:px-10 hover:shadow"
+                  >
+                    Subscribe
+                  </RouterLink>
+                </template>
+              </div>
+              <template v-else>
+                <RouterLink
+                  to="/login"
+                  class="inline-flex items-center justify-center w-full px-8 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-full hover:bg-indigo-700 md:py-2 md:text-md md:px-10 hover:shadow"
+                >
+                  Subscribe
+                </RouterLink>
+              </template>
             </div>
           </div>
         </aside>
